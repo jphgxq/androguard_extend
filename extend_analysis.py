@@ -7,29 +7,6 @@ from androlyze import *
 import os
 import os.path
 
-class linkObj:
-    def __init__(self,clz="",methd="",touchid="",flst=[]):
-        self.clz = clz          #函数所属类
-        self.methd = methd      #函数名
-        self.touchid = touchid  #需要触发的控件的id
-        self.flst = flst        #调用此函数的函数列表
-    def setClz(self,strr):
-        self.clz = strr
-    def setMethd(self,strr):
-        self.methd = strr
-    def setTouchid(self,strr):
-        self.touchid = strr
-    def setFlst(sefl,ll):
-        self.flst = ll
-    def getClz(self):
-        return self.clz
-    def getMethd(self):
-        return self.methd
-    def getTouchid(self):
-        return self.touchid
-    def getFlst(self):
-        return self.flst
-
 class call_relation:
     def __init__(self, src_class_name, src_method_name, dst_class_name, dst_method_name):
         self.src_class_name = src_class_name
