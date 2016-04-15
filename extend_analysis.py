@@ -63,16 +63,14 @@ def get_permissions_path(dx):
     for i in range(0, len(perlist)):
         perline = perlist[i]
         # print perline
-        src_relation = perline.split('--->')[0]
-        dst_relation = perline.split('--->')[1]
+        src_relation = perline.split(' ---> ')[0]
+        dst_relation = perline.split(' ---> ')[1]
         src_class_name = src_relation.split('->')[0]
         src_method_name = src_relation.split('->')[1]
         dst_class_name = dst_relation.split('->')[0]
         dst_method_name = dst_relation.split('->')[1]
         src_class_name = src_class_name[0: len(src_class_name)-1]
         dst_class_name = dst_class_name[0: len(dst_class_name)-1]
-        # print src_relation, dst_relation
-        # print src_class_name, src_method_name, dst_class_name, dst_method_name
         flist.append(call_relation(src_class_name, src_method_name, dst_class_name, dst_method_name))
     return flist
 
@@ -121,43 +119,34 @@ def show_Pathes(vm, path) :
             return str3
 
 #相当于show_xref()，获取起始函数的调用者
-def getxref(d,clzstr,metstr1,metstr2):
-   # print clzstr
-#    print metstr1
- #   print metstr2
-    print '--------------'
-    str1f = []
+def getxref(d, clzstr, metstr1, metstr2):
+
+    # print '--------------'
+    metf = []
     metstr = metstr1
-  #  str1t = []
-    clz = getattr(d,clzstr.strip(),'not find')#(d,'CLASS_Lcom_angles_fanbianyitry_MainActivity','not find')
-    met = getattr(clz,metstr.strip(),'not find 2')#(clz,'METHOD_a_Landroid_content_ContextV','not find 2')
-    if met!='not find 2':
-        ##met.show_xref()
-        try :
-         #   bytecode._PrintSubBanner("XREF")
-            str1f=bytecode._PrintXRef("F", met.XREFfrom.items)
-         #   str1t=bytecode._PrintXRef("T", met.XREFto.items)
-          #  bytecode._PrintSubBanner()
+    #查看是否有class和method
+    clz = getattr(d, clzstr.strip(), 'not find')
+    met = getattr(clz, metstr.strip(), 'not find 2')
+    #若方法存在则进行输出
+    if met != 'not find 2':
+        try:
+            metf = bytecode._PrintXRef("F", met.XREFfrom.items)
         except AttributeError:
             pass
     else:
         metstr = metstr2
-        met = getattr(clz,metstr.strip(),'not find 3')
-        ##met2.show_xref()
-        try :
-           # bytecode._PrintSubBanner("XREF")
-            str1f=bytecode._PrintXRef("F", met.XREFfrom.items)
-         #   str1t=bytecode._PrintXRef("T", met2.XREFto.items)
-            #bytecode._PrintSubBanner()
+        met = getattr(clz, metstr.strip(), 'not find 3')
+        try:
+            metf = bytecode._PrintXRef("F", met.XREFfrom.items)
         except AttributeError:
             pass
-    return str1f,metstr
+    return metstr, metf
 
 #相当于show_xref()，获取前一次获得的函数的调用者
-def getfxerf(d,flist):
+def getfxerf(d, flist):
     for f in flist:
+        print f
         fline = '_'.join(f.split('/'))           #对代表函数的字符串处理，提取出类和函数的参数、返回值等相关信息
-    #    fline = '_'.join(fline.split('$'))
         fclzstr = fline.split()[1].split(';')[0]
         fmetstr = fline.split()[2]
         tempid = len(fline.split())-1
@@ -174,9 +163,9 @@ def getfxerf(d,flist):
         print fclzstr
         print fmetstr1
         print fmetstr2
-        fstrf2,fmetstrs2 = getxref(d,fclzstr,fmetstr1,fmetstr2)
-        if len(fstrf2) != 0:#如果还有F：，即还有其他函数调用此函数，继续向上寻找调用者
-            getfxerf(d,fstrf2)
+        method_str2, method_from2 = getxref(d,fclzstr,fmetstr1,fmetstr2)
+        if len(method_from2) != 0:#如果还有F：，即还有其他函数调用此函数，继续向上寻找调用者
+            getfxerf(d, method_from2)
         print '********************'#flist中的一个函数查询完毕
 
 def main():
@@ -192,9 +181,12 @@ def main():
             for i in permissions_list:
                 str_class = '_'.join(i.src_class_name.split('/'))
                 str_method = '_'.join(i.src_method_name.split('/'))
-                clzstr = 'CLASS_' + ''.join(str_class.split('$'))
-                metstr = 'METHOD_' + ''.join(str_method.split('$'))
-
+                clzstr = 'CLASS_' + '_'.join(str_class.split('$'))
+                metstr1 = 'METHOD_' + ''.join((str_method.split('(')[0]).split('$'))
+                metstr2 = 'METHOD_' + ''.join((''.join((''.join((''.join(('_'.join(str_method.split('('))).split(';)'))).split('; '))).split('$'))).split(';'))
+                method_str, method_from = getxref(d, clzstr, metstr1, metstr2)
+                if len(method_from) != 0:
+                    getfxerf(d, method_from)
 
 if __name__ == '__main__':
     main()
